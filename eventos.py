@@ -4,11 +4,11 @@ import streamlit as st
 import plotly.express as px
 
 # Ruta del archivo
-file_path = r"\\servernas\Validaciones-Metrología\COORVSC-CALIFICACIONES\CALIFICACIONES\EQUIPOS\Secador de Lecho Fluido Glatt 600 kg N°4\calificación 2024\VSC\EventHistory.csv"
+#file_path = r"\\servernas\Validaciones-Metrología\COORVSC-CALIFICACIONES\CALIFICACIONES\EQUIPOS\Secador de Lecho Fluido Glatt 600 kg N°4\calificación 2024\VSC\EventHistory.csv"
 
 # Leer y limpiar los datos
 data = pd.read_csv(
-    file_path,
+    "EventHistory.csv",
     encoding='latin1',
     skiprows=5,  # Saltar las líneas iniciales no relevantes 
     names=["Timestamp", "Evento" ]

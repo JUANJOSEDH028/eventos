@@ -8,7 +8,7 @@ import plotly.express as px
 
 # Leer y limpiar los datos
 data = pd.read_csv(
-    "EventHistory.csv",
+    "EventHistory1.csv",
     encoding='latin1',
     skiprows=5,  # Saltar las líneas iniciales no relevantes 
     names=["Timestamp", "Evento" ]

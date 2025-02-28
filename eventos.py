@@ -28,11 +28,13 @@ if uploaded_file is not None:
     data = data[data["Marca de tiempo"].str.contains(r"\d{2}-\d{2}-\d{4}", na=False)]
     data.reset_index(drop=True, inplace=True)
 
-    # Convertir la columna Marca de tiempo a formato datetime
+    # Convertir la columna "Marca de tiempo" a formato datetime
     data["Marca de tiempo"] = pd.to_datetime(data["Marca de tiempo"])
 
-    # Separar la columna "Evento" en "Evento" y "Usuario"
+    # Separar la columna "Evento" en dos partes: descripción y usuario.
+    # Se extrae el usuario a partir de la parte final que contiene 'Por ...'
     data["Usuario"] = data["Evento"].str.extract(r'Por (.+)$')
+    # Se extrae la descripción del evento, tomando lo que aparece antes del " -"
     data["Evento"] = data["Evento"].str.extract(r"^(.*?) -")
 
     # --- Filtro: Conservar solo registros con un usuario registrado ---
@@ -78,7 +80,7 @@ if uploaded_file is not None:
 
     # --- Selector de Rango de Fechas ---
     st.subheader("Filtrar por Rango de Fechas")
-    # Usamos solo valores válidos (dropna) para obtener las fechas mínimas y máximas
+    # Obtener fechas mínimas y máximas válidas de "Marca de tiempo"
     if data["Marca de tiempo"].dropna().empty:
         st.error("No se encontraron valores de fecha válidos en 'Marca de tiempo'.")
         st.stop()
@@ -93,7 +95,7 @@ if uploaded_file is not None:
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
 
-    # Filtrar los datos por rango de fechas
+    # Filtrar los datos por el rango de fechas seleccionado
     filtered_data = data[(data["Marca de tiempo"] >= start_date) & (data["Marca de tiempo"] <= end_date)]
 
     st.subheader("Lista Completa de Eventos Filtrados")

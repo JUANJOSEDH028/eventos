@@ -18,23 +18,21 @@ if uploaded_file is not None:
             uploaded_file,
             encoding='latin1',
             skiprows=5,  # Saltar las líneas iniciales no relevantes
-            names=["Timestamp", "Evento"]
+            names=["Marca de tiempo", "Evento"]
         )
     except Exception as e:
         st.error(f"Error al leer el archivo: {e}")
         st.stop()
 
-    # Filtrar filas que tengan un formato de fecha en 'Timestamp'
-    data = data[data["Timestamp"].str.contains(r"\d{2}-\d{2}-\d{4}", na=False)]
+    # Filtrar filas que tengan un formato de fecha en 'Marca de tiempo'
+    data = data[data["Marca de tiempo"].str.contains(r"\d{2}-\d{2}-\d{4}", na=False)]
     data.reset_index(drop=True, inplace=True)
 
-    # Convertir la columna Timestamp a formato datetime
-    data["Timestamp"] = pd.to_datetime(data["Timestamp"])
+    # Convertir la columna Marca de tiempo a formato datetime
+    data["Marca de tiempo"] = pd.to_datetime(data["Marca de tiempo"])
 
     # Separar la columna "Evento" en "Evento" y "Usuario"
-    # Se extrae el usuario a partir de la parte final que contiene 'Por ...'
     data["Usuario"] = data["Evento"].str.extract(r'Por (.+)$')
-    # Se extrae la descripción del evento, que es la parte antes del " -"
     data["Evento"] = data["Evento"].str.extract(r"^(.*?) -")
 
     # --- Filtro: Conservar solo registros con un usuario registrado ---
@@ -80,16 +78,23 @@ if uploaded_file is not None:
 
     # --- Selector de Rango de Fechas ---
     st.subheader("Filtrar por Rango de Fechas")
+    # Usamos solo valores válidos (dropna) para obtener las fechas mínimas y máximas
+    if data["Marca de tiempo"].dropna().empty:
+        st.error("No se encontraron valores de fecha válidos en 'Marca de tiempo'.")
+        st.stop()
+    min_date_val = data["Marca de tiempo"].dropna().min().date()
+    max_date_val = data["Marca de tiempo"].dropna().max().date()
+
     start_date, end_date = st.date_input(
         "Seleccione el rango de fechas:",
-        [data["Timestamp"].min().date(), data["Timestamp"].max().date()],
+        [min_date_val, max_date_val],
         key="date_range_selector"
     )
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
 
     # Filtrar los datos por rango de fechas
-    filtered_data = data[(data["Timestamp"] >= start_date) & (data["Timestamp"] <= end_date)]
+    filtered_data = data[(data["Marca de tiempo"] >= start_date) & (data["Marca de tiempo"] <= end_date)]
 
     st.subheader("Lista Completa de Eventos Filtrados")
     st.dataframe(filtered_data, use_container_width=True)
@@ -101,7 +106,7 @@ if uploaded_file is not None:
 
     # --- Histograma de Eventos por Hora ---
     st.subheader("Distribución de Eventos por Hora del Día")
-    filtered_data["Hora"] = filtered_data["Timestamp"].dt.hour
+    filtered_data["Hora"] = filtered_data["Marca de tiempo"].dt.hour
 
     fig_histogram = px.histogram(
         filtered_data,

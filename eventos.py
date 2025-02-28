@@ -25,16 +25,15 @@ if uploaded_file is not None:
         st.stop()
 
     # Filtrar filas que tengan un formato de fecha en 'Marca de tiempo'
-    data = data[data["Marca de tiempo"].str.contains(r"\d{2}-\d{2}-\d{4}", na=False)]
+    # Se amplió el patrón para aceptar días y meses de 1 o 2 dígitos y separadores "-" o "/"
+    data = data[data["Marca de tiempo"].str.contains(r"\d{1,2}[-/]\d{1,2}[-/]\d{4}", na=False)]
     data.reset_index(drop=True, inplace=True)
 
     # Convertir la columna "Marca de tiempo" a formato datetime
-    data["Marca de tiempo"] = pd.to_datetime(data["Marca de tiempo"])
+    data["Marca de tiempo"] = pd.to_datetime(data["Marca de tiempo"], errors="coerce")
 
     # Separar la columna "Evento" en dos partes: descripción y usuario.
-    # Se extrae el usuario a partir de la parte final que contiene 'Por ...'
     data["Usuario"] = data["Evento"].str.extract(r'Por (.+)$')
-    # Se extrae la descripción del evento, tomando lo que aparece antes del " -"
     data["Evento"] = data["Evento"].str.extract(r"^(.*?) -")
 
     # --- Filtro: Conservar solo registros con un usuario registrado ---

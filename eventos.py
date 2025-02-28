@@ -25,11 +25,11 @@ if uploaded_file is not None:
         st.stop()
 
     # Filtrar filas que tengan un formato de fecha en 'Timestamp'
-    data = data[data["Timestamp"].str.contains(r"\d{2}-\d{2}-\d{4}", na=False)]
+    data = data[data["Marca de tiempo"].str.contains(r"\d{2}-\d{2}-\d{4}", na=False)]
     data.reset_index(drop=True, inplace=True)
 
     # Convertir la columna Timestamp a formato datetime
-    data["Timestamp"] = pd.to_datetime(data["Timestamp"])
+    data["Marca de tiempo"] = pd.to_datetime(data["Marca de tiempo"])
 
     # Separar la columna "Evento" en "Evento" y "Usuario"
     # Se extrae el usuario a partir de la parte final que contiene 'Por ...'
@@ -89,7 +89,7 @@ if uploaded_file is not None:
     end_date = pd.to_datetime(end_date)
 
     # Filtrar los datos por rango de fechas
-    filtered_data = data[(data["Timestamp"] >= start_date) & (data["Timestamp"] <= end_date)]
+    filtered_data = data[(data["Marca de tiempo"] >= start_date) & (data["Marca de tiempo"] <= end_date)]
 
     st.subheader("Lista Completa de Eventos Filtrados")
     st.dataframe(filtered_data, use_container_width=True)
@@ -101,7 +101,7 @@ if uploaded_file is not None:
 
     # --- Histograma de Eventos por Hora ---
     st.subheader("Distribución de Eventos por Hora del Día")
-    filtered_data["Hora"] = filtered_data["Timestamp"].dt.hour
+    filtered_data["Hora"] = filtered_data["Marca de tiempo"].dt.hour
 
     fig_histogram = px.histogram(
         filtered_data,

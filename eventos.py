@@ -13,27 +13,29 @@ uploaded_file = st.file_uploader("Seleccione el archivo CSV de Eventos", type=["
 
 if uploaded_file is not None:
     try:
-        # Leer y limpiar los datos
+        # Leer el archivo; se asume que se deben saltar las primeras 5 líneas
         data = pd.read_csv(
             uploaded_file,
             encoding='latin1',
-            skiprows=5,  # Saltar las líneas iniciales no relevantes
+            skiprows=5,  # Ajusta este valor si es necesario
             names=["Marca de tiempo", "Evento"]
         )
     except Exception as e:
         st.error(f"Error al leer el archivo: {e}")
         st.stop()
 
-    # Filtrar filas que tengan un formato de fecha en 'Marca de tiempo'
-    # Se amplió el patrón para aceptar días y meses de 1 o 2 dígitos y separadores "-" o "/"
-    data = data[data["Marca de tiempo"].str.contains(r"\d{1,2}[-/]\d{1,2}[-/]\d{4}", na=False)]
-    data.reset_index(drop=True, inplace=True)
-
-    # Convertir la columna "Marca de tiempo" a formato datetime
+    # Convertir la columna "Marca de tiempo" a datetime
+    # Si el formato de la fecha es diferente (por ejemplo, "YYYY-MM-DD" o "DD/MM/YYYY"),
+    # pd.to_datetime intentará inferir el formato.
     data["Marca de tiempo"] = pd.to_datetime(data["Marca de tiempo"], errors="coerce")
 
-    # Separar la columna "Evento" en dos partes: descripción y usuario.
+    # Eliminar filas donde la fecha no fue convertida correctamente (NaT)
+    data = data.dropna(subset=["Marca de tiempo"]).reset_index(drop=True)
+
+    # Separar la columna "Evento" en "Evento" y "Usuario"
+    # Se extrae el usuario a partir de la parte final que contiene 'Por ...'
     data["Usuario"] = data["Evento"].str.extract(r'Por (.+)$')
+    # Se extrae la descripción del evento, tomando lo que aparece antes del " -"
     data["Evento"] = data["Evento"].str.extract(r"^(.*?) -")
 
     # --- Filtro: Conservar solo registros con un usuario registrado ---
@@ -79,12 +81,9 @@ if uploaded_file is not None:
 
     # --- Selector de Rango de Fechas ---
     st.subheader("Filtrar por Rango de Fechas")
-    # Obtener fechas mínimas y máximas válidas de "Marca de tiempo"
-    if data["Marca de tiempo"].dropna().empty:
-        st.error("No se encontraron valores de fecha válidos en 'Marca de tiempo'.")
-        st.stop()
-    min_date_val = data["Marca de tiempo"].dropna().min().date()
-    max_date_val = data["Marca de tiempo"].dropna().max().date()
+    # Obtener las fechas mínimas y máximas de "Marca de tiempo"
+    min_date_val = data["Marca de tiempo"].min().date()
+    max_date_val = data["Marca de tiempo"].max().date()
 
     start_date, end_date = st.date_input(
         "Seleccione el rango de fechas:",
